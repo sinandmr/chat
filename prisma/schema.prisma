@@ -1,0 +1,66 @@
+// docker run --name chat-mongo -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=chat -e MONGO_INITDB_ROOT_PASSWORD=123 -d mongo
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid()) @map("_id") @db.ObjectId
+  first_name String
+  last_name  String
+  username   String   @unique
+  email      String   @unique
+  password   String   @map("password")
+  created_at DateTime @default(now()) @map("createdAt")
+  updated_at DateTime @updatedAt @map("updatedAt")
+
+  UserGroups       UserGroup[] @relation("UserGroups")
+  createdGroups    Group[]     @relation("CreatedBy")
+  sentMessages     Message[]   @relation("SentMessages")
+  receivedMessages Message[]   @relation("ReceivedMessages")
+}
+
+model Group {
+  id            String   @id @default(uuid()) @map("_id") @db.ObjectId
+  name          String
+  active        Boolean  @default(true)
+  created_by    User     @relation("CreatedBy", fields: [created_by_id], references: [id])
+  created_by_id String   @db.ObjectId
+  created_at    DateTime @default(now()) @map("createdAt")
+  updated_at    DateTime @updatedAt @map("updatedAt")
+
+  GroupUsers UserGroup[] @relation("GroupUsers")
+}
+
+model UserGroup {
+  id         String   @id @default(uuid()) @map("_id") @db.ObjectId
+  user       User     @relation("UserGroups", fields: [user_id], references: [id])
+  user_id    String   @db.ObjectId
+  group      Group    @relation("GroupUsers", fields: [group_id], references: [id])
+  group_id   String   @db.ObjectId
+  active     Boolean  @default(true)
+  created_at DateTime @default(now()) @map("createdAt")
+  updated_at DateTime @updatedAt @map("updatedAt")
+}
+
+model Message {
+  id           String    @id @default(uuid()) @map("_id") @db.ObjectId
+  message      String
+  seen         Boolean   @default(false)
+  seen_at      DateTime?
+  author       User      @relation("SentMessages", fields: [author_id], references: [id])
+  author_id    String    @db.ObjectId
+  recipient    User      @relation("ReceivedMessages", fields: [recipient_id], references: [id])
+  recipient_id String    @db.ObjectId
+  reply_to     Message?  @relation("Replies", fields: [reply_to_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reply_to_id  String    @db.ObjectId
+  created_at   DateTime  @default(now()) @map("createdAt")
+  updated_at   DateTime  @updatedAt @map("updatedAt")
+
+  Replies Message[] @relation("Replies")
+}
