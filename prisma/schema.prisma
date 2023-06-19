@@ -26,15 +26,14 @@ model User {
 }
 
 model Group {
-  id            String   @id @default(uuid())
+  id            String      @id @default(uuid())
   name          String
-  active        Boolean  @default(true)
-  created_by    User     @relation("CreatedBy", fields: [created_by_id], references: [id])
+  active        Boolean     @default(true)
+  created_by    User        @relation("CreatedBy", fields: [created_by_id], references: [id])
   created_by_id String
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-
-  GroupUsers UserGroup[] @relation("GroupUsers")
+  group_users   UserGroup[] @relation("GroupUsers")
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
 }
 
 model UserGroup {
@@ -46,6 +45,8 @@ model UserGroup {
   active     Boolean  @default(true)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@unique([user_id, group_id])
 }
 
 model Message {
