@@ -1,23 +1,23 @@
-// docker run --name chat-mongo -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=chat -e MONGO_INITDB_ROOT_PASSWORD=123 -d mongo
+// docker run --name chat-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -p 5433:5432 -d postgres
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id         String   @id @default(uuid()) @map("_id") @db.ObjectId
+  id         String   @id @default(uuid())
   first_name String
   last_name  String
   username   String   @unique
   email      String   @unique
-  password   String   @map("password")
-  created_at DateTime @default(now()) @map("createdAt")
-  updated_at DateTime @updatedAt @map("updatedAt")
+  password   String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   UserGroups       UserGroup[] @relation("UserGroups")
   createdGroups    Group[]     @relation("CreatedBy")
@@ -26,41 +26,41 @@ model User {
 }
 
 model Group {
-  id            String   @id @default(uuid()) @map("_id") @db.ObjectId
+  id            String   @id @default(uuid())
   name          String
   active        Boolean  @default(true)
   created_by    User     @relation("CreatedBy", fields: [created_by_id], references: [id])
-  created_by_id String   @db.ObjectId
-  created_at    DateTime @default(now()) @map("createdAt")
-  updated_at    DateTime @updatedAt @map("updatedAt")
+  created_by_id String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
   GroupUsers UserGroup[] @relation("GroupUsers")
 }
 
 model UserGroup {
-  id         String   @id @default(uuid()) @map("_id") @db.ObjectId
+  id         String   @id @default(uuid())
   user       User     @relation("UserGroups", fields: [user_id], references: [id])
-  user_id    String   @db.ObjectId
+  user_id    String
   group      Group    @relation("GroupUsers", fields: [group_id], references: [id])
-  group_id   String   @db.ObjectId
+  group_id   String
   active     Boolean  @default(true)
-  created_at DateTime @default(now()) @map("createdAt")
-  updated_at DateTime @updatedAt @map("updatedAt")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Message {
-  id           String    @id @default(uuid()) @map("_id") @db.ObjectId
+  id           String    @id @default(uuid())
   message      String
   seen         Boolean   @default(false)
   seen_at      DateTime?
   author       User      @relation("SentMessages", fields: [author_id], references: [id])
-  author_id    String    @db.ObjectId
+  author_id    String
   recipient    User      @relation("ReceivedMessages", fields: [recipient_id], references: [id])
-  recipient_id String    @db.ObjectId
+  recipient_id String
   reply_to     Message?  @relation("Replies", fields: [reply_to_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  reply_to_id  String    @db.ObjectId
-  created_at   DateTime  @default(now()) @map("createdAt")
-  updated_at   DateTime  @updatedAt @map("updatedAt")
+  reply_to_id  String?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
 
   Replies Message[] @relation("Replies")
 }
