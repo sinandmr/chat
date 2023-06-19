@@ -1,6 +1,7 @@
 import { Logger } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+
 import { AppModule } from './modules/app.module';
 
 async function bootstrap(): Promise<void> {
@@ -15,6 +16,6 @@ async function bootstrap(): Promise<void> {
   logger.log(
     `Application is running on: http://localhost:${config.get('PORT')}`,
   );
-}
+};
 
 void bootstrap();
