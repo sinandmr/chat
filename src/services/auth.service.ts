@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt';
 
+import { IRequestUser } from '@/common/types/request.type';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -9,9 +10,11 @@ import { PrismaService } from './prisma.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService,
+  constructor(
+    private prisma: PrismaService,
     private jwt: JwtService,
-    private config: ConfigService) { }
+    private config: ConfigService
+  ) { }
 
   async find(username: string): Promise<User> {
     return await this.prisma.user.findUnique({
@@ -37,6 +40,18 @@ export class AuthService {
       secret: this.config.get('JWT_SECRET'),
     })
   }
+
+  async verifyToken(token: string): Promise<IRequestUser> {
+    const verify = await this.jwt.verify(token, {
+      secret: this.config.get('JWT_SECRET'),
+    })
+
+    delete verify.password
+    delete verify.created_at
+    delete verify.updated_at
+
+    return verify
+  };
 
   async hashPassword(password: string): Promise<string> {
     const salt = await bcrypt.genSalt();

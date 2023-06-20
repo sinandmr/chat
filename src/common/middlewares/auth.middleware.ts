@@ -3,14 +3,6 @@ import { NextFunction, Request, Response } from 'express';
 import { AuthService } from '@/services/auth.service';
 import { HttpStatus, Inject, Injectable, NestMiddleware } from '@nestjs/common';
 
-declare global {
-  namespace Express {
-    export interface Request {
-      user: Object;
-    }
-  }
-}
-
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
   constructor(private auth: AuthService) {
@@ -35,6 +27,5 @@ export class AuthMiddleware implements NestMiddleware {
         error: err.message
       })
     }
-
   }
 }

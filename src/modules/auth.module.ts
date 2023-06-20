@@ -1,3 +1,4 @@
+import { AuthMiddleware } from '@/common/middlewares/auth.middleware';
 import { AuthController } from '@/controllers/auth.controller';
 import { PrismaService } from '@/services/prisma.service';
 import { Module } from '@nestjs/common';
@@ -21,7 +22,8 @@ import { AuthService } from '../services/auth.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PrismaService, JwtService]
+  providers: [AuthService, PrismaService, JwtService, AuthMiddleware],
+  exports: [AuthService],
 })
 
 export class AuthModule { }

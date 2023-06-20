@@ -26,14 +26,16 @@ model User {
 }
 
 model Group {
-  id            String      @id @default(uuid())
+  id            String    @id @default(uuid())
   name          String
-  active        Boolean     @default(true)
-  created_by    User        @relation("CreatedBy", fields: [created_by_id], references: [id])
+  active        Boolean   @default(true)
+  created_by    User      @relation("CreatedBy", fields: [created_by_id], references: [id])
   created_by_id String
-  group_users   UserGroup[] @relation("GroupUsers")
-  created_at    DateTime    @default(now())
-  updated_at    DateTime    @updatedAt
+  messages      Message[] @relation("GroupMessages")
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  GroupUsers UserGroup[] @relation("GroupUsers")
 }
 
 model UserGroup {
@@ -56,8 +58,10 @@ model Message {
   seen_at      DateTime?
   author       User      @relation("SentMessages", fields: [author_id], references: [id])
   author_id    String
-  recipient    User      @relation("ReceivedMessages", fields: [recipient_id], references: [id])
-  recipient_id String
+  recipient    User?     @relation("ReceivedMessages", fields: [recipient_id], references: [id])
+  recipient_id String?
+  group        Group?    @relation("GroupMessages", fields: [group_id], references: [id])
+  group_id     String?
   reply_to     Message?  @relation("Replies", fields: [reply_to_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   reply_to_id  String?
   created_at   DateTime  @default(now())

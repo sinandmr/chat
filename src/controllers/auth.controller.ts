@@ -40,7 +40,7 @@ export class AuthController {
 
       res.status(HttpStatus.OK).json({
         success: true,
-        token,
+        access_token: token,
         user
       })
     } catch (err) {

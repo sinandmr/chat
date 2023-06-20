@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { AuthModule } from './auth.module';
+import { ChatModule } from './chat.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { AuthModule } from './auth.module';
       load: [config],
     }),
     AuthModule,
+    ChatModule,
   ]
 })
 
