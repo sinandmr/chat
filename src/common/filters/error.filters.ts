@@ -17,12 +17,12 @@ export class HttpErrorFilter implements ExceptionFilter {
       code: status,
       path: req.url,
       method: req.method,
-      timestamp: new Date().toLocaleDateString(),
+      timestamp: new Date(),
       message: status !== HttpStatus.INTERNAL_SERVER_ERROR ? exception.message || null : 'Internal server error',
     };
 
     const production = {
-      status: false,
+      success: false,
       error: status !== HttpStatus.INTERNAL_SERVER_ERROR ? exception.message || null : 'Internal server error',
     };
 

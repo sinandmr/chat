@@ -20,6 +20,10 @@ export class AuthService {
     return await this.prisma.user.findUnique({
       where: {
         username
+      },
+      include: {
+        UserGroups: true,
+        createdGroups: true
       }
     })
   }

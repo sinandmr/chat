@@ -5,8 +5,7 @@ import { HttpStatus, Inject, Injectable, NestMiddleware } from '@nestjs/common';
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
-  constructor(private auth: AuthService) {
-  }
+  constructor(private auth: AuthService) { }
 
   async use(req: Request, res: Response, next: NextFunction) {
     try {
