@@ -1,3 +1,4 @@
+import { ICRUDQueries } from '@/common/types/crud.interface';
 import { IRequestUser } from '@/common/types/request.type';
 import { Injectable } from '@nestjs/common';
 import { Group, Message, Prisma, UserGroup } from '@prisma/client';
@@ -12,7 +13,7 @@ export class ChatService {
     return await this.prisma.$transaction(callback)
   };
 
-  async get(id: string): Promise<Message> {
+  async getMessage(id: string): Promise<Message> {
     return await this.prisma.message.findUnique({
       where: {
         id
@@ -20,37 +21,36 @@ export class ChatService {
     })
   };
 
-  async getChat(user1Id: string, user2Id: string): Promise<Message[]> {
+  async getChat(user1Id: string, user2Id: string, queries: ICRUDQueries): Promise<Message[]> {
     return await this.prisma.message.findMany({
-      orderBy: {
-        created_at: 'asc'
-      },
       where: {
         OR: [
           { author_id: user1Id, recipient_id: user2Id },
           { author_id: user2Id, recipient_id: user1Id }
         ],
       },
-      include: {
-        Replies: true,
-        _count: true,
-        recipient: true
-      },
+      orderBy: queries.orderBy,
+      include: queries.include,
+      skip: queries.skip,
+      take: queries.take
     })
   };
 
-  async save(data: Prisma.MessageCreateInput, user: IRequestUser): Promise<Message> {
+  async saveMessage(data: Prisma.MessageCreateInput, queries: ICRUDQueries): Promise<any> {
     return await this.prisma.message.create({
-      data
+      data,
+      ...(queries.select ? { select: queries.select } : {}),
+      ...(queries.include ? { include: queries.include } : {})
     })
   };
 
-  async update(data: Prisma.MessageUpdateInput): Promise<Message> {
+  async updateMessage(data: Prisma.MessageUpdateInput, queries: ICRUDQueries): Promise<any> {
     return await this.prisma.message.update({
       where: {
         id: data.id as string
       },
-      data
+      data,
+      select: queries.select
     })
   };
 
@@ -62,31 +62,45 @@ export class ChatService {
     })
   }
 
-  async getGroup(id: string): Promise<Group> {
+  async getGroup(id: string, queries: ICRUDQueries = {}): Promise<Group> {
     return await this.prisma.group.findUnique({
       where: {
-        id
+        id,
       },
-      include: {
-        GroupUsers: true
-      }
+      ...(queries.where ? { where: queries.where } : {}),
+      ...(queries.select ? { select: queries.select } : {}),
+      ...(queries.include ? { include: queries.include } : {}),
     })
   }
 
+  async getAllGroups(id: string, query: ICRUDQueries): Promise<Group[]> {
+    return await this.prisma.group.findMany({
+      where: query.where || {
+        GroupUsers: {
+          some: {
+            user_id: id
+          }
+        }
+      },
+      include: query.include,
+      skip: query.skip,
+      take: query.take,
+      orderBy: query.orderBy
+    })
+  }
 
-  async saveGroup(data: Prisma.GroupCreateInput): Promise<Group> {
+  async saveGroup(data: Prisma.GroupCreateInput, queries: ICRUDQueries): Promise<Group> {
     return await this.prisma.group.create({
       data,
-      include: {
-        GroupUsers: true
-      }
+      ...(queries.select ? { select: queries.select } : {}),
+      ...(queries.include ? { include: queries.include } : {}),
     })
   }
 
   async deleteGroup(id: string): Promise<any> {
     return await this.prisma.group.delete({
       where: {
-        id
+        id: id as string
       },
     })
   }
@@ -102,11 +116,11 @@ export class ChatService {
     return await this.prisma.userGroup.deleteMany({
       where: {
         user_id: {
-          in: ids,
+          in: ids
         },
         AND: {
           group_id: {
-            in: ids,
+            equals: group_id
           }
         }
       }

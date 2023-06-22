@@ -1,12 +1,15 @@
 import { Response } from 'express';
 
+import { Queries } from '@/common/decorators/crud-queries.decorator';
 import { User } from '@/common/decorators/user.decorator';
 import { HttpErrorFilter } from '@/common/filters/error.filters';
+import { ICRUDQueries } from '@/common/types/crud.interface';
 import { IRequestUser } from '@/common/types/request.type';
 import validateUUID from '@/common/utils/uuid.validate';
 import { ChatService } from '@/services/chat.service';
 import {
-  Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Res, UseFilters
+  Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Query, Res,
+  UseFilters
 } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 
@@ -15,12 +18,12 @@ import { Prisma, PrismaClient } from '@prisma/client';
 export class ChatController {
   constructor(private chat: ChatService) { }
 
-  @Get(':id')
-  async getChat(@Param('id') id: string, @User() me: IRequestUser, @Res() res: Response) {
+  @Get('message/:id')
+  async getChat(@Param('id') recipient_id: string, @Queries() queries: ICRUDQueries, @User() me: IRequestUser, @Res() res: Response) {
     try {
-      validateUUID(id as string, 'id');
+      validateUUID(recipient_id as string, 'id');
 
-      const messages = await this.chat.getChat(id as string, me.id);
+      const messages = await this.chat.getChat(recipient_id as string, me.id, queries);
 
       if (!messages)
         throw new Error('Messages not found');
@@ -36,8 +39,8 @@ export class ChatController {
     }
   }
 
-  @Post('mesage')
-  async send(@Body() data: Prisma.MessageCreateInput, @User() me: IRequestUser, @Res() res: Response) {
+  @Post('message')
+  async send(@Body() data: Prisma.MessageCreateInput, @Queries(['select', 'include']) queries: ICRUDQueries, @User() me: IRequestUser, @Res() res: Response) {
     try {
       const { message, recipient, group, reply_to } = data || {};
 
@@ -57,7 +60,7 @@ export class ChatController {
         ...(reply_to && { reply_to: { connect: { id: reply_to as string } } })
       };
 
-      const sent = await this.chat.save(messageData, me);
+      const sent = await this.chat.saveMessage(messageData, queries);
 
       if (!sent)
         throw new Error('Message not sent');
@@ -74,17 +77,13 @@ export class ChatController {
   }
 
   @Put('message/:id')
-  async seen(@Param('id') id: string, @User() me: IRequestUser, @Res() res: Response) {
+  async seen(@Param('id') id: string, @Queries('select') queries: ICRUDQueries, @User() me: IRequestUser, @Res() res: Response) {
     try {
       validateUUID(id as string, 'id');
 
       const updated = await this.chat.transaction(async (prisma: PrismaClient) => {
 
-        const message = await prisma.message.findUnique({
-          where: {
-            id: id as string,
-          },
-        });
+        const message = await this.chat.getMessage(id);
 
         if (!message) {
           throw new Error('Message not found');
@@ -96,12 +95,7 @@ export class ChatController {
         message.seen = true;
         message.seen_at = new Date();
 
-        return await prisma.message.update({
-          where: {
-            id: id as string,
-          },
-          data: message,
-        });
+        return await this.chat.updateMessage(message, queries);
       });
 
       if (!updated)
@@ -123,7 +117,7 @@ export class ChatController {
     try {
       validateUUID(id as string, 'id');
 
-      const message = await this.chat.get(id as string);
+      const message = await this.chat.getMessage(id as string);
 
       if (!message)
         throw new Error('Message not found');
@@ -147,14 +141,36 @@ export class ChatController {
     }
   }
 
-  @Post('group')
-  async createGroup(@Body() data: Prisma.GroupCreateInput | any, @User() me: IRequestUser, @Res() res: Response) {
+  @Get('group')
+  async getAllGroups(@Queries() queries: ICRUDQueries, @User() me: IRequestUser, @Res() res: Response) {
+    try {
+      validateUUID(me.id, 'user_id');
 
+      const groups = await this.chat.getAllGroups(me.id, queries);
+
+      if (!groups)
+        throw new Error('Groups not found');
+
+      res.status(HttpStatus.OK).json({
+        success: true,
+        payload: {
+          data: groups
+        }
+      })
+    } catch (err) {
+      throw new HttpException(err.message, HttpStatus.BAD_REQUEST)
+    }
+  }
+
+  @Post('group')
+  async createGroup(@Body() data: Prisma.GroupCreateInput | any, @Queries(['select', 'include']) queries: ICRUDQueries, @User() me: IRequestUser, @Res() res: Response) {
     try {
       const { name, users } = data || {};
 
       if (!Array.isArray(users))
         throw new Error('Users must be an array');
+
+      users.forEach((id: string, i: number) => validateUUID(id, `${i}. user_id`));
 
       users.push(me.id);
 
@@ -170,7 +186,7 @@ export class ChatController {
           }
         };
 
-        const group = await this.chat.saveGroup(groupData);
+        const group = await this.chat.saveGroup(groupData, queries);
 
         if (!group)
           throw new Error('Group not created');
@@ -185,7 +201,7 @@ export class ChatController {
         if (!saveUsers)
           throw new Error('Group not created');
 
-        return await this.chat.getGroup(group.id);
+        return await this.chat.getGroup(group.id, queries);
       });
 
       if (!group)
@@ -213,25 +229,27 @@ export class ChatController {
       if (!group)
         throw new Error('Group not found');
 
-      const groupUsers = group['GroupUsers'].map((user: any) => user.id);
+      if (group.created_by_id !== me.id)
+        throw new Error('You cannot delete this group');
+
+      const groupUsers = group['GroupUsers']?.map((userGroup: any) => userGroup.user_id);
 
       const deletedGroup = await this.chat.transaction(async () => {
-
-        const deletedGroup = await this.chat.deleteGroup(group_id as string);
-
-        if (!deletedGroup)
-          throw new Error('Group not deleted');
-
-        const deleteUsers = await this.chat.removeUserFromGroup(groupUsers, group_id);
+        const deleteUsers = await this.chat.removeUserFromGroup(groupUsers, group.id);
 
         if (!deleteUsers)
-          throw new Error('Group not deleted');
+          throw new Error('Failed to remove users from group');
 
-        return deletedGroup
+        const deleted = await this.chat.deleteGroup(group_id as string);
+
+        if (!deleted)
+          throw new Error('Failed to delete group');
+
+        return deleted;
       });
 
-      if (deletedGroup)
-        throw new Error('Group not deleted');
+      if (!deletedGroup)
+        throw new Error('Failed to delete group');
 
       res.status(HttpStatus.OK).json({
         success: true,
@@ -246,9 +264,8 @@ export class ChatController {
   }
 
   @Post('group/user')
-  async addUserToGroup(@Body() data: { users: string[], group_id: string }, @User() me: IRequestUser, @Res() res: Response) {
+  async addUserToGroup(@Body() data: { users: string[], group_id: string }, @Queries(['select', 'include']) queries: ICRUDQueries, @User() me: IRequestUser, @Res() res: Response) {
     try {
-
       const { users, group_id } = data || {};
 
       validateUUID(group_id as string, 'group_id');
@@ -258,28 +275,32 @@ export class ChatController {
 
       users.forEach((id: string) => validateUUID(id, 'user_id'));
 
-      const group = await this.chat.getGroup(group_id as string);
+      const group = await this.chat.transaction(async () => {
+        const group = await this.chat.getGroup(group_id as string);
 
-      if (!group)
-        throw new Error('Group not found');
+        if (!group)
+          throw new Error('Group not found');
 
-      if (group.created_by_id !== me.id)
-        throw new Error('You cannot add user to this group');
+        if (group.created_by_id !== me.id)
+          throw new Error('You cannot add user to this group');
 
-      const userGroupData: Prisma.UserGroupCreateManyInput[] = users.map((id: string) => ({
-        user_id: id,
-        group_id: group.id
-      }));
+        const userGroupData: Prisma.UserGroupCreateManyInput[] = users.map((id: string) => ({
+          user_id: id,
+          group_id: group.id
+        }));
 
-      const added = await this.chat.addUserToGroup(userGroupData);
+        const added = await this.chat.addUserToGroup(userGroupData);
 
-      if (!added)
-        throw new Error('User not added');
+        if (!added)
+          throw new Error('User not added');
+
+        return await this.chat.getGroup(group.id, queries);
+      });
 
       res.status(HttpStatus.OK).json({
         success: true,
         payload: {
-          group
+          data: group
         }
       });
     } catch (err) {
@@ -287,8 +308,8 @@ export class ChatController {
     }
   }
 
-  @Delete('group/user/:group_id/:user_id')
-  async removeUserFromGroup(@Param() params: { group_id: string, user_id: string }, @User() me: IRequestUser, @Res() res: Response) {
+  @Delete('group/:group_id/user/:user_id')
+  async removeUserFromGroup(@Param() params: { group_id: string, user_id: string }, @Queries(['']) @User() me: IRequestUser, @Res() res: Response) {
     try {
       const { user_id, group_id } = params || {};
 
@@ -298,7 +319,7 @@ export class ChatController {
       if (user_id === me.id)
         throw new Error('You cannot remove yourself from this group');
 
-      const group = await this.chat.getGroup(group_id as string);
+      const group = await this.chat.getGroup(group_id as string,);
 
       if (!group)
         throw new Error('Group not found');
