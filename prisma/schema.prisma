@@ -26,15 +26,15 @@ model User {
 }
 
 model Group {
-  id            String    @id @default(uuid())
+  id            String   @id @default(uuid())
   name          String
-  active        Boolean   @default(true)
-  created_by    User      @relation("CreatedBy", fields: [created_by_id], references: [id])
+  active        Boolean  @default(true)
+  created_by    User     @relation("CreatedBy", fields: [created_by_id], references: [id])
   created_by_id String
-  messages      Message[] @relation("GroupMessages")
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
+  Messages   Message[]   @relation("GroupMessages")
   GroupUsers UserGroup[] @relation("GroupUsers")
 }
 
