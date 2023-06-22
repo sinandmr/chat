@@ -17,7 +17,12 @@ export const Queries = createParamDecorator((data: any, ctx: ExecutionContext) =
     };
 
     if (Array.isArray(data) && data.length > 0) {
-      return data.map((key: string) => crud[key]);
+      return {
+        ...data.reduce((acc, cur) => {
+          acc[cur] = crud[cur];
+          return acc;
+        }, {})
+      }
     }
 
     if (data) {
