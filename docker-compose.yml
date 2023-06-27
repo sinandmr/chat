@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  chat-app:
+    container_name: chat-app
+    image: chat-app:1.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "sleep 3 && npx prisma migrate dev && node build/main.js"
+    ports:
+      - '4444:4444'
+    environment:
+      - NODE_ENV=production
+      - PORT=4444
+      - JWT_SECRET=chat-app
+      - DATABASE_URL=postgresql://postgres:postgres@chat-postgres/chat
+    depends_on:
+      - chat-postgres
+    networks:
+      - connector
+
+  chat-postgres:
+    container_name: chat-postgres
+    image: postgres
+    ports:
+      - '5433:5433'
+    environment:
+      - POSTGRES_DB=chat
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - connector
+
+networks:
+  connector:
+    driver: bridge

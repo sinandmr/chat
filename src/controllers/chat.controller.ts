@@ -25,8 +25,8 @@ export class ChatController {
 
       const messages = await this.chat.getChat(recipient_id as string, me.id, queries);
 
-      if (!messages)
-        throw new Error('Messages not found');
+      if (!messages || !messages.length)
+        throw { message: 'Messages not found', code: HttpStatus.OK, success: true };
 
       res.status(HttpStatus.OK).json({
         success: true,
@@ -35,7 +35,7 @@ export class ChatController {
         }
       })
     } catch (err) {
-      throw new HttpException(err.message, HttpStatus.BAD_REQUEST)
+      throw new HttpException(err.message, err.code || HttpStatus.BAD_REQUEST)
     }
   }
 

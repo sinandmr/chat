@@ -1,6 +1,5 @@
 {
   "name": "chat-app",
-  "version": "1.0",
   "description": "Chat App with NestJS and Socket",
   "author": "Sinan DEMİR",
   "private": true,
