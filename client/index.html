@@ -1,0 +1,49 @@
+<html>
+
+<head>
+  <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"
+    integrity="sha384-KAZ4DtjNhLChOB/hxXuKqhMLYvx3b5MlT55xPEiNmREKRzeEm+RVPlTnAn0ajQNs"
+    crossorigin="anonymous"></script>
+  <script>
+    const socket = io('http://localhost:3028');
+
+    socket.on('connect', function () {
+      console.log('Connected');
+
+      socket.emit('getChat', {
+        recipient_id: 'b5d83d03-4eae-48c2-b0e13-b7bfee394290',
+        user_id: "b4f7bbce-90e4-4ac3-9b0c-43cd249769aa"
+      }, response =>
+        console.log('chat:', response),
+      );
+    });
+
+    const emit = (event) => {
+      socket.emit('getChat', {
+        recipient_id: 'b5d83d03-4eae-48c2-b0e1-b7bfee394290',
+        user_id: "b4f7bbce-90e4-4ac3-9b0c-43cd249769aa"
+      }, response =>
+        console.log('chat:', response),
+      );
+    }
+
+    socket.on('events', function (data) {
+      console.log('event', data);
+    });
+
+    socket.on('exception', function (data) {
+      console.log('error:', data);
+    });
+
+    socket.on('disconnect', function () {
+      console.log('Disconnected');
+    });
+
+  </script>
+</head>
+
+<body>
+  <button onclick="emit()">send</button>
+</body>
+
+</html>
