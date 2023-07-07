@@ -7,33 +7,48 @@
   <script>
     const socket = io('http://localhost:3028');
 
+    const getChatData = {
+      recipient_id: '10a93f89-381b-4ac7-99c7-bbf696638c8b',
+      user_id: "b4f7bbce-90e4-4ac3-9b0c-43cd249769aa",
+      query: {
+        limit: 2,
+        offset: 0,
+        order: {
+          created_at: 'asc'
+        },
+        with: {
+          recipient: true,
+          _count: true
+        },
+        select: {
+          id: true,
+          recipient_id: true,
+          user_id: true,
+          message: true,
+          created_at: true,
+          updated_at: true,
+        }
+      }
+    }
+
     socket.on('connect', function () {
       console.log('Connected');
 
-      socket.emit('getChat', {
-        recipient_id: 'b5d83d03-4eae-48c2-b0e13-b7bfee394290',
-        user_id: "b4f7bbce-90e4-4ac3-9b0c-43cd249769aa"
-      }, response =>
-        console.log('chat:', response),
-      );
+      socket.on('error', function (data) {
+        return console.log('my error:', data);
+      });
+
+      socket.emit('getChat', getChatData, (response) => {
+        if (response.error) return console.log('error:', response.error)
+        console.log('chat:', response)
+      });
     });
+
 
     const emit = (event) => {
-      socket.emit('getChat', {
-        recipient_id: 'b5d83d03-4eae-48c2-b0e1-b7bfee394290',
-        user_id: "b4f7bbce-90e4-4ac3-9b0c-43cd249769aa"
-      }, response =>
-        console.log('chat:', response),
-      );
+      socket.emit('getChat', getChatData, response =>
+        console.log('chat:', response));
     }
-
-    socket.on('events', function (data) {
-      console.log('event', data);
-    });
-
-    socket.on('exception', function (data) {
-      console.log('error:', data);
-    });
 
     socket.on('disconnect', function () {
       console.log('Disconnected');
@@ -43,7 +58,10 @@
 </head>
 
 <body>
-  <button onclick="emit()">send</button>
+  <div style="display: flex; justify-content: center;align-items: center; height: 100vh;">
+    <button onclick="emit()"
+      style="width: 20vw; height: 15vh; border-radius: 20px; border: 2px solid #000; cursor: pointer">send</button>
+  </div>
 </body>
 
 </html>

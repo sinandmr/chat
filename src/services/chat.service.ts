@@ -21,7 +21,7 @@ export class ChatService {
     })
   };
 
-  async getChat(user1Id: string, user2Id: string): Promise<Message[]> {
+  async getChat(user1Id: string, user2Id: string, queries: ICRUDQueries): Promise<Message[]> {
     return await this.prisma.message.findMany({
       where: {
         OR: [
@@ -29,10 +29,10 @@ export class ChatService {
           { author_id: user2Id, recipient_id: user1Id }
         ],
       },
-      // orderBy: queries.orderBy,
-      // include: queries.include,
-      // skip: queries.skip,
-      // take: queries.take
+      orderBy: queries.orderBy,
+      include: queries.include,
+      skip: queries.skip,
+      take: queries.take
     })
   };
 
