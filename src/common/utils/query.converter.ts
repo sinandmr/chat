@@ -1,6 +1,9 @@
 import { ICRUDQueries } from '../types/crud.interface';
 
 const converter = (query: any, data: any = null) => {
+
+  if (!query) return {};
+
   const crud: ICRUDQueries = {
     skip: query.offset ? query.offset : 0,
     take: query.limit ? query.limit : 10,

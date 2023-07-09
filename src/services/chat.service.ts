@@ -36,21 +36,21 @@ export class ChatService {
     })
   };
 
-  async saveMessage(data: Prisma.MessageCreateInput, queries: ICRUDQueries): Promise<any> {
+  async saveMessage(data: Prisma.MessageCreateInput, { select, include }: ICRUDQueries): Promise<any> {
     return await this.prisma.message.create({
       data,
-      ...(queries.select ? { select: queries.select } : {}),
-      ...(queries.include ? { include: queries.include } : {})
+      ...(select ? { select } : {}),
+      ...(include ? { include } : {})
     })
   };
 
-  async updateMessage(data: Prisma.MessageUpdateInput, queries: ICRUDQueries): Promise<any> {
+  async updateMessage(data: Prisma.MessageUpdateInput, { select }: ICRUDQueries): Promise<any> {
     return await this.prisma.message.update({
       where: {
         id: data.id as string
       },
       data,
-      select: queries.select
+      select
     })
   };
 
@@ -62,38 +62,37 @@ export class ChatService {
     })
   }
 
-  async getGroup(id: string, queries: ICRUDQueries = {}): Promise<Group> {
+  async getGroup(id: string, { select, include }: ICRUDQueries = {}): Promise<Group> {
     return await this.prisma.group.findUnique({
       where: {
-        id,
+        id
       },
-      ...(queries.where ? { where: queries.where } : {}),
-      ...(queries.select ? { select: queries.select } : {}),
-      ...(queries.include ? { include: queries.include } : {}),
+      ...(select ? { select } : {}),
+      ...(include ? { include } : {}),
     })
   }
 
-  async getAllGroups(id: string, query: ICRUDQueries): Promise<Group[]> {
+  async getAllGroups(id: string, queries: ICRUDQueries): Promise<Group[]> {
     return await this.prisma.group.findMany({
-      where: query.where || {
+      where: queries.where || {
         GroupUsers: {
           some: {
             user_id: id
           }
         }
       },
-      include: query.include,
-      skip: query.skip,
-      take: query.take,
-      orderBy: query.orderBy
+      include: queries.include,
+      skip: queries.skip,
+      take: queries.take,
+      orderBy: queries.orderBy
     })
   }
 
-  async saveGroup(data: Prisma.GroupCreateInput, queries: ICRUDQueries): Promise<Group> {
+  async saveGroup(data: Prisma.GroupCreateInput, { select, include }: ICRUDQueries): Promise<Group> {
     return await this.prisma.group.create({
       data,
-      ...(queries.select ? { select: queries.select } : {}),
-      ...(queries.include ? { include: queries.include } : {}),
+      ...(select ? { select } : {}),
+      ...(include ? { include } : {}),
     })
   }
 
