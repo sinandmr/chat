@@ -7,11 +7,11 @@
   <script>
     const socket = io('http://localhost:3028');
 
-    const getChatData = {
-      recipient_id: '10a93f89-381b-4ac7-99c7-bbf696638c8b',
-      user_id: "b4f7bbce-90e4-4ac3-9b0c-43cd249769aa",
+    const chatData = {
+      recipient_id: 'b4f7bbce-90e4-4ac3-9b0c-43cd249769aa',
+      me: "b5d83d03-4eae-48c2-b0e1-b7bfee394290",
       query: {
-        limit: 2,
+        limit: 20,
         offset: 0,
         order: {
           created_at: 'asc'
@@ -31,23 +31,120 @@
       }
     }
 
+    const sendMessageData = {
+      message: 'Hello World 2',
+      recipient: 'b5d83d03-4eae-48c2-b0e1-b7bfee394290',
+      me: 'b4f7bbce-90e4-4ac3-9b0c-43cd249769aa',
+      query: {
+        with: {
+          author: true,
+          recipient: {
+            include: {
+              sentMessages: true
+            }
+          },
+          _count: true
+        }
+      }
+    }
+
+    const seenMessageData = {
+      me: 'b5d83d03-4eae-48c2-b0e1-b7bfee394290',
+      id: '231500cb-e0b0-4cc7-ba23-82b01111ac6b',
+      query: {
+        select: {
+          id: true,
+          recipient_id: true
+        }
+      }
+    }
+
+    const deleteMessageData = {
+      me: 'b4f7bbce-90e4-4ac3-9b0c-43cd249769aa',
+      id: "e53f609f-fe2d-4e19-9a64-05120b9c3a21"
+    }
+
     socket.on('connect', function () {
       console.log('Connected');
 
       socket.on('error', function (data) {
-        return console.log('my error:', data);
-      });
-
-      socket.emit('getChat', getChatData, (response) => {
-        if (response.error) return console.log('error:', response.error)
-        console.log('chat:', response)
+        return console.error('my error:', data);
       });
     });
 
-
     const emit = (event) => {
-      socket.emit('getChat', getChatData, response =>
-        console.log('chat:', response));
+      socket.emit('get chat', chatData, response =>
+        console.log('getChat:', response));
+    }
+
+    const sendMessage = (event) => {
+      socket.emit('send message', sendMessageData, response =>
+        console.log('sendMessage:', response));
+    }
+
+    const seenMessage = (event) => {
+      socket.emit('seen message', seenMessageData, response =>
+        console.log('set seen message:', response));
+    }
+
+    const deleteMessage = (event) => {
+      socket.emit('delete message', deleteMessageData, response =>
+        console.log('deleted message:', response));
+    }
+
+    const createGroup = (event) => {
+      socket.emit('create group', {
+        me: 'b4f7bbce-90e4-4ac3-9b0c-43cd249769aa',
+        name: 'socket group',
+        users: [
+          '10a93f89-381b-4ac7-99c7-bbf696638c8b',
+          'b5d83d03-4eae-48c2-b0e1-b7bfee394290'
+        ],
+        // query: {
+        //   with: {
+        //     GroupUsers: true
+        //   }
+        // }
+      }, response =>
+        console.log('groups:', response));
+    }
+
+    const getGroups = (event) => {
+      socket.emit('get users groups', {
+        me: 'b4f7bbce-90e4-4ac3-9b0c-43cd249769aa'
+      }, response =>
+        console.log('groups:', response));
+    }
+
+    const deleteGroup = (event) => {
+      socket.emit('delete group', {
+        me: 'b4f7bbce-90e4-4ac3-9b0c-43cd249769aa',
+        group_id: '4a2ad4e6-50d5-486b-b4b5-94f83952bd75'
+      }, response =>
+        console.log('deleted group:', response));
+    }
+
+    const addUserToGroup = (event) => {
+      socket.emit('add user to group', {
+        me: "b4f7bbce-90e4-4ac3-9b0c-43cd249769aa",
+        users: ["10a93f89-381b-4ac7-99c7-bbf696638c8b", "b5d83d03-4eae-48c2-b0e1-b7bfee394290"],
+        group_id: "e9d4842c-0015-4e51-b6ca-60521a5a9bbf",
+        query: {
+          with: {
+            GroupUsers: true,
+          }
+        }
+      }, response =>
+        console.log('group:', response));
+    }
+
+    const removeUserFromGroup = (event) => {
+      socket.emit('remove user from group', {
+        me: 'b4f7bbce-90e4-4ac3-9b0c-43cd249769aa',
+        user_id: '10a93f89-381b-4ac7-99c7-bbf696638c8b',
+        group_id: '6ec53894-3b73-44e5-821e-a5a3b32b5f82',
+      }, response =>
+        console.log('group:', response));
     }
 
     socket.on('disconnect', function () {
@@ -58,9 +155,34 @@
 </head>
 
 <body>
-  <div style="display: flex; justify-content: center;align-items: center; height: 100vh;">
+  <div style="display: flex; justify-content: center;align-items: center; flex-wrap: wrap; gap:20px">
     <button onclick="emit()"
-      style="width: 20vw; height: 15vh; border-radius: 20px; border: 2px solid #000; cursor: pointer">send</button>
+      style="width: 20vw; height: 15vh; border-radius: 20px; border: 2px solid #000; cursor: pointer">getChat
+    </button>
+    <button onclick="sendMessage()"
+      style="width: 20vw; height: 15vh; border-radius: 20px; border: 2px solid #000; cursor: pointer">sendMessage
+    </button>
+    <button onclick="seenMessage()"
+      style="width: 20vw; height: 15vh; border-radius: 20px; border: 2px solid #000; cursor: pointer">seenMessage
+    </button>
+    <button onclick="deleteMessage()"
+      style="width: 20vw; height: 15vh; border-radius: 20px; border: 2px solid #000; cursor: pointer">deleteMessage
+    </button>
+    <button onclick="getGroups()"
+      style="width: 20vw; height: 15vh; border-radius: 20px; border: 2px solid #000; cursor: pointer">getGroups
+    </button>
+    <button onclick="addUserToGroup()"
+      style="width: 20vw; height: 15vh; border-radius: 20px; border: 2px solid #000; cursor: pointer">addUserToGroup
+    </button>
+    <button onclick="deleteGroup()"
+      style="width: 20vw; height: 15vh; border-radius: 20px; border: 2px solid #000; cursor: pointer">deleteGroup
+    </button>
+    <button onclick="createGroup()"
+      style="width: 20vw; height: 15vh; border-radius: 20px; border: 2px solid #000; cursor: pointer">createGroup
+    </button>
+    <button onclick="removeUserFromGroup()"
+      style="width: 20vw; height: 15vh; border-radius: 20px; border: 2px solid #000; cursor: pointer">removeUserFromGroup
+    </button>
   </div>
 </body>
 

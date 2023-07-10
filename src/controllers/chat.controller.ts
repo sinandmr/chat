@@ -132,9 +132,7 @@ export class ChatController {
 
       res.status(HttpStatus.OK).json({
         success: true,
-        payload: {
-          message: deleted
-        }
+        payload: deleted
       })
     } catch (err) {
       throw new HttpException(err.message, HttpStatus.BAD_REQUEST)
@@ -309,7 +307,7 @@ export class ChatController {
   }
 
   @Delete('group/:group_id/user/:user_id')
-  async removeUserFromGroup(@Param() params: { group_id: string, user_id: string }, @Queries(['']) @User() me: IRequestUser, @Res() res: Response) {
+  async removeUserFromGroup(@Param() params: { group_id: string, user_id: string }, @User() me: IRequestUser, @Res() res: Response) {
     try {
       const { user_id, group_id } = params || {};
 
@@ -319,7 +317,11 @@ export class ChatController {
       if (user_id === me.id)
         throw new Error('You cannot remove yourself from this group');
 
-      const group = await this.chat.getGroup(group_id as string,);
+      const group = await this.chat.getGroup(group_id as string, {
+        include: {
+          GroupUsers: true
+        }
+      });
 
       if (!group)
         throw new Error('Group not found');

@@ -65,7 +65,7 @@ export class ChatService {
   async getGroup(id: string, { select, include }: ICRUDQueries = {}): Promise<Group> {
     return await this.prisma.group.findUnique({
       where: {
-        id
+        id,
       },
       ...(select ? { select } : {}),
       ...(include ? { include } : {}),
