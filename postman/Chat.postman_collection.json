@@ -1,0 +1,443 @@
+{
+	"info": {
+		"_postman_id": "cc58d82c-669a-4fcf-baf3-e45fae9c180a",
+		"name": "Chat",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23093697"
+	},
+	"item": [
+		{
+			"name": "sendMessage",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"message\":\"müsait misin2?\",\n    \"recipient\":\"a553cbcd-5eed-4b1f-ba3e-ef700647943c\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3028/chat/message?select={\"id\":true,\"recipient_id\":true}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3028",
+					"path": [
+						"chat",
+						"message"
+					],
+					"query": [
+						{
+							"key": "select",
+							"value": "{\"id\":true,\"recipient_id\":true}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "createGroup",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\":\"deliler\",\n    \"users\":[]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3028/chat/group?with={\"GroupUsers\":true}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3028",
+					"path": [
+						"chat",
+						"group"
+					],
+					"query": [
+						{
+							"key": "with",
+							"value": "{\"GroupUsers\":true}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "addUserToGroup",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"group_id\":\"652cf8b6-fde2-4b9a-9119-fe8f88c206e2\",\n    \"users\":[\"a553cbcd-5eed-4b1f-ba3e-ef700647943c\",\"b067c538-2d8a-42a3-9689-adf78d08afa7\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3028/chat/group/user?with={\"GroupUsers\":true}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3028",
+					"path": [
+						"chat",
+						"group",
+						"user"
+					],
+					"query": [
+						{
+							"key": "with",
+							"value": "{\"GroupUsers\":true}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "deleteGroup",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3028/chat/group/6372514c-a408-4088-a2e8-04ea69ba24c8",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3028",
+					"path": [
+						"chat",
+						"group",
+						"6372514c-a408-4088-a2e8-04ea69ba24c8"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getGroups",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3028/chat/group?with={\"GroupUsers\":{\"include\":{\"user\":true}},\"Messages\":{\"orderBy\":{\"created_at\":\"asc\"}}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3028",
+					"path": [
+						"chat",
+						"group"
+					],
+					"query": [
+						{
+							"key": "with",
+							"value": "{\"GroupUsers\":{\"include\":{\"user\":true}},\"Messages\":{\"orderBy\":{\"created_at\":\"asc\"}}}"
+						},
+						{
+							"key": "filters",
+							"value": "{\"id\":\"23232\"}",
+							"disabled": true
+						},
+						{
+							"key": "offset",
+							"value": "20",
+							"disabled": true
+						},
+						{
+							"key": "limit",
+							"value": "1",
+							"disabled": true
+						},
+						{
+							"key": "order",
+							"value": "{\"created_at\":\"desc\"}",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "removeUserFromGroup",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3028/chat/group/43397e4e-b762-4550-9ea6-e830e780177b/user/43397e4e-b762-4550-9ea6-e830e780177b",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3028",
+					"path": [
+						"chat",
+						"group",
+						"43397e4e-b762-4550-9ea6-e830e780177b",
+						"user",
+						"43397e4e-b762-4550-9ea6-e830e780177b"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "setSeenMessage",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3028/chat/message/afa5358c-caa6-4948-a987-07e0e0a64a6f?select={\"id\":true,\"recipient_id\":true}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3028",
+					"path": [
+						"chat",
+						"message",
+						"afa5358c-caa6-4948-a987-07e0e0a64a6f"
+					],
+					"query": [
+						{
+							"key": "select",
+							"value": "{\"id\":true,\"recipient_id\":true}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "deleteMessage",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3028/chat/message/7912151d-250d-476e-8fb3-23476e1bbae3",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3028",
+					"path": [
+						"chat",
+						"message",
+						"7912151d-250d-476e-8fb3-23476e1bbae3"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getChat",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3028/chat/message/a553cbcd-5eed-4b1f-ba3e-ef700647943c?order={\"created_at\":\"asc\"}&with={\"Replies\":true,\"recipient\":true,\"_count\":true}&offset=1&limit=5",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3028",
+					"path": [
+						"chat",
+						"message",
+						"a553cbcd-5eed-4b1f-ba3e-ef700647943c"
+					],
+					"query": [
+						{
+							"key": "order",
+							"value": "{\"created_at\":\"asc\"}"
+						},
+						{
+							"key": "with",
+							"value": "{\"Replies\":true,\"recipient\":true,\"_count\":true}"
+						},
+						{
+							"key": "offset",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "5"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
